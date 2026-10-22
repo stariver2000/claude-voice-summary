@@ -1,0 +1,13 @@
+{
+  "name": "claude-voice-summary",
+  "description": "Spoken English summaries for Claude Code replies, read aloud with a local Kokoro voice",
+  "owner": {
+    "name": "stariver2000"
+  },
+  "plugins": [
+    {
+      "name": "voice-summary",
+      "source": "./"
+    }
+  ]
+}
