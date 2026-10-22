@@ -34,6 +34,8 @@ claude plugin install voice-summary --marketplace stariver2000/claude-voice-summ
 
 필요한 것: Python 3.10 이상, `curl`, 오디오 재생 프로그램(리눅스는 `paplay`, `pw-play`, `aplay`, `ffplay` 중 하나, macOS는 `afplay`). 다른 위치에 설치하려면 `CLAUDE_VOICE_HOME` 환경 변수를 지정하세요.
 
+블루투스나 HDMI 출력은 쉬고 있다가 깨어나는 동안 소리 앞부분을 놓치기 때문에, 음성 앞에 0.8초 무음을 넣습니다. 길이는 `CLAUDE_VOICE_LEAD_IN` 환경 변수(초 단위)로 바꿀 수 있고, 유선 스피커라면 `0`으로 꺼도 됩니다.
+
 ## 사용법
 
 | 명령 | 하는 일 |

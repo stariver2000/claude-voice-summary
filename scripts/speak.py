@@ -15,6 +15,9 @@ DATA_DIR = os.environ.get("CLAUDE_VOICE_HOME", os.path.expanduser("~/.local/shar
 CACHE_DIR = os.path.expanduser("~/.cache/claude-voice")
 PID_FILE = os.path.join(CACHE_DIR, "speak.pid")
 WAV_FILE = os.path.join(CACHE_DIR, "speak.wav")
+# Silence played before the speech: an idle (suspended) Bluetooth or HDMI output
+# takes a moment to wake and drops whatever plays first.
+LEAD_IN_SECONDS = float(os.environ.get("CLAUDE_VOICE_LEAD_IN", "0.8"))
 PLAYERS = (["paplay"], ["pw-play"], ["aplay", "-q"], ["afplay"], ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet"])
 
 
@@ -34,13 +37,15 @@ def play(path):
 
 
 def synthesize_and_play(text, voice, speed):
+    import numpy as np
     import soundfile as sf
     from kokoro_onnx import Kokoro
 
     kokoro = Kokoro(f"{DATA_DIR}/voices/kokoro-v1.0.onnx", f"{DATA_DIR}/voices/voices-v1.0.bin")
     lang = "en-gb" if voice.startswith("b") else "en-us"
     samples, rate = kokoro.create(text, voice=voice, speed=speed, lang=lang)
-    sf.write(WAV_FILE, samples, rate)
+    lead_in = np.zeros(int(rate * LEAD_IN_SECONDS), dtype=samples.dtype)
+    sf.write(WAV_FILE, np.concatenate([lead_in, samples]), rate)
     play(WAV_FILE)
 
 
