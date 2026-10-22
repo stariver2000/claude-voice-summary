@@ -1,6 +1,6 @@
 {
   "name": "voice-summary",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Ends each reply with a short English summary and reads it aloud with a natural local voice (Kokoro TTS)",
   "license": "MIT"
 }

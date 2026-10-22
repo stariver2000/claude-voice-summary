@@ -15,6 +15,14 @@ const VOICE_GROUPS: readonly { label: string; voices: readonly string[] }[] = [
 ]
 const VOICES = VOICE_GROUPS.flatMap(group => group.voices)
 
+// Accepts `am_michael`, `am michael`, `AM-Michael` or just `michael` (when one voice has that name).
+function resolveVoice(words: readonly string[]): string | undefined {
+  const typed = words.join('_').toLowerCase().replace(/[-\s]+/g, '_')
+  if (VOICES.includes(typed)) return typed
+  const byName = VOICES.filter(voice => voice.slice(3) === typed)
+  return byName.length === 1 ? byName[0] : undefined
+}
+
 function voiceList(current: string): string {
   const rows = VOICE_GROUPS.map(({ label, voices }) => {
     const names = voices.map(name => (name === current ? `[${name}]` : name).padEnd(13)).join('')
@@ -25,7 +33,7 @@ function voiceList(current: string): string {
     '',
     ...rows,
     '',
-    'Change:  /voice voice <name>    e.g. /voice voice am_michael',
+    'Change:  /voice voice <name>    e.g. /voice voice am_michael  (or just: /voice voice michael)',
   ].join('\n')
 }
 
@@ -122,7 +130,8 @@ export const register: Register = on => {
   })
 
   on('command.run', { command: 'voice' }, async ($, e) => {
-    const [action = '', value = ''] = e.args.trim().split(/\s+/)
+    const [action = '', ...rest] = e.args.trim().split(/\s+/)
+    const value = rest[0] ?? ''
     const config = await loadConfig($)
 
     switch (action) {
@@ -135,8 +144,9 @@ export const register: Register = on => {
       case 'list':
         return { text: voiceList(config.voice) }
       case 'voice': {
-        if (!VOICES.includes(value)) return { text: `Unknown voice "${value}".\n\n${voiceList(config.voice)}` }
-        const updated = await saveConfig($, { voice: value })
+        const voice = resolveVoice(rest)
+        if (!voice) return { text: `Unknown voice "${rest.join(' ')}".\n\n${voiceList(config.voice)}` }
+        const updated = await saveConfig($, { voice })
         return { text: (await speak($, SAMPLE, updated)) ?? describe(updated) }
       }
       case 'speed': {
