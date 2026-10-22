@@ -42,7 +42,7 @@ claude plugin install voice-summary --marketplace stariver2000/claude-voice-summ
 | --- | --- |
 | `/voice` | 현재 설정 보기 |
 | `/voice on`, `/voice off` | 음성 요약 켜기, 끄기 |
-| `/voice voice <이름>` | 목소리를 바꾸고 샘플 듣기 |
+| `/voice <이름>` | 목소리를 바꾸고 샘플 듣기 (예: `/voice michael`) |
 | `/voice speed <0.5-2>` | 말하는 속도를 바꾸고 샘플 듣기 (기본값 1.05) |
 | `/voice list` | 목소리 목록 보기 |
 | `/voice test` | 현재 목소리 들어 보기 |
