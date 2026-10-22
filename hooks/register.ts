@@ -6,12 +6,28 @@ const DEFAULTS: Config = { enabled: true, voice: 'af_heart', speed: 1.05 }
 const MARKER = '🔊'
 const SAMPLE = 'Hi, this is how I will sound when I read your English summaries.'
 
-// Kokoro v1.0 English voices: a = American, b = British, f = female, m = male.
-const VOICES = [
-  'af_heart', 'af_bella', 'af_nicole', 'af_sarah', 'af_sky', 'af_nova',
-  'am_michael', 'am_adam', 'am_eric', 'am_liam', 'am_onyx',
-  'bf_emma', 'bf_isabella', 'bf_alice', 'bm_george', 'bm_lewis', 'bm_daniel',
+// Kokoro v1.0 English voices, grouped by the two-letter prefix (accent, then gender).
+const VOICE_GROUPS: readonly { label: string; voices: readonly string[] }[] = [
+  { label: 'American  female', voices: ['af_heart', 'af_bella', 'af_nicole', 'af_sarah', 'af_sky', 'af_nova'] },
+  { label: 'American  male', voices: ['am_michael', 'am_adam', 'am_eric', 'am_liam', 'am_onyx'] },
+  { label: 'British   female', voices: ['bf_emma', 'bf_isabella', 'bf_alice'] },
+  { label: 'British   male', voices: ['bm_george', 'bm_lewis', 'bm_daniel'] },
 ]
+const VOICES = VOICE_GROUPS.flatMap(group => group.voices)
+
+function voiceList(current: string): string {
+  const rows = VOICE_GROUPS.map(({ label, voices }) => {
+    const names = voices.map(name => (name === current ? `[${name}]` : name).padEnd(13)).join('')
+    return `  ${label.padEnd(18)}${names.trimEnd()}`
+  })
+  return [
+    `Voices  (current: ${current})`,
+    '',
+    ...rows,
+    '',
+    'Change:  /voice voice <name>    e.g. /voice voice am_michael',
+  ].join('\n')
+}
 
 const SECTION = [
   `At the very end of every reply to the person, add a heading "### ${MARKER} English"`,
@@ -117,9 +133,9 @@ export const register: Register = on => {
       case 'off':
         return { text: describe(await saveConfig($, { enabled: action === 'on' })) }
       case 'list':
-        return { text: `Voices (a = American, b = British, f = female, m = male):\n${VOICES.join('  ')}` }
+        return { text: voiceList(config.voice) }
       case 'voice': {
-        if (!VOICES.includes(value)) return { text: `Unknown voice "${value}". Pick one of:\n${VOICES.join('  ')}` }
+        if (!VOICES.includes(value)) return { text: `Unknown voice "${value}".\n\n${voiceList(config.voice)}` }
         const updated = await saveConfig($, { voice: value })
         return { text: (await speak($, SAMPLE, updated)) ?? describe(updated) }
       }
