@@ -1,5 +1,7 @@
 # voice-summary
 
+![voice-summary: Claude의 답변을 영어로 듣는 습관](assets/hero.png)
+
 영어 듣기 연습을 위한 Claude Code 플러그인(mod)입니다. Claude가 답변할 때마다 끝에 `🔊 English`라는 제목으로 쉬운 영어 요약을 2~3문장 붙이고, 이 플러그인이 그 요약을 소리 내어 읽어 줍니다.
 
 음성은 [Kokoro](https://github.com/thewh1teagle/kokoro-onnx)로 만듭니다. 자연스러운 목소리를 내는 작은 로컬 음성 합성(TTS) 모델이라 CPU만으로 돌아가고, 어떤 온라인 서비스에도 데이터를 보내지 않습니다.
