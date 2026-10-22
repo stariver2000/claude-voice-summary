@@ -1,4 +1,4 @@
-import type { EngineInterface, Register } from 'claude-code'
+import type { CommandRunResult, EngineInterface, Register } from 'claude-code'
 
 type Config = { enabled: boolean; voice: string; speed: number }
 
@@ -33,7 +33,7 @@ function voiceList(current: string): string {
     '',
     ...rows,
     '',
-    'Change:  /voice voice <name>    e.g. /voice voice am_michael  (or just: /voice voice michael)',
+    'Change:  /voice <name>    e.g. /voice michael  or  /voice am_michael',
   ].join('\n')
 }
 
@@ -48,7 +48,7 @@ const SECTION = [
 const USAGE = [
   '/voice                 show the current settings',
   '/voice on | off        turn the spoken summary on or off',
-  '/voice voice <name>    pick a voice (see /voice list)',
+  '/voice <name>          pick a voice, e.g. /voice michael (see /voice list)',
   '/voice speed <0.5-2>   set the speaking speed (1.0 is normal)',
   '/voice list            list the voices',
   '/voice test            hear the current voice',
@@ -93,6 +93,13 @@ async function speak($: EngineInterface, text: string, config: Config): Promise<
     { stdin: text, timeoutMs: 10_000 },
   )
   return exitCode === 0 ? undefined : `Could not speak: ${stderr.trim().split('\n').pop()}`
+}
+
+async function switchVoice($: EngineInterface, config: Config, words: readonly string[]): Promise<CommandRunResult> {
+  const voice = resolveVoice(words)
+  if (!voice) return { text: `Unknown voice "${words.join(' ')}".\n\n${voiceList(config.voice)}` }
+  const updated = await saveConfig($, { voice })
+  return { text: (await speak($, SAMPLE, updated)) ?? describe(updated) }
 }
 
 function describe(config: Config): string {
@@ -143,12 +150,8 @@ export const register: Register = on => {
         return { text: describe(await saveConfig($, { enabled: action === 'on' })) }
       case 'list':
         return { text: voiceList(config.voice) }
-      case 'voice': {
-        const voice = resolveVoice(rest)
-        if (!voice) return { text: `Unknown voice "${rest.join(' ')}".\n\n${voiceList(config.voice)}` }
-        const updated = await saveConfig($, { voice })
-        return { text: (await speak($, SAMPLE, updated)) ?? describe(updated) }
-      }
+      case 'voice':
+        return switchVoice($, config, rest)
       case 'speed': {
         const speed = Number(value)
         if (!Number.isFinite(speed) || speed < 0.5 || speed > 2) return { text: 'Speed must be a number from 0.5 to 2 (1.0 is normal).' }
@@ -165,6 +168,8 @@ export const register: Register = on => {
         return { text: `${stdout.trim()}\n${(await speak($, SAMPLE, config)) ?? describe(config)}` }
       }
       default:
+        // `/voice michael` is a shortcut for `/voice voice michael`.
+        if (resolveVoice([action, ...rest])) return switchVoice($, config, [action, ...rest])
         return { text: USAGE }
     }
   })
